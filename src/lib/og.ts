@@ -76,7 +76,7 @@ async function loadLogoDataUri(): Promise<string> {
 
   const svg = await readFile(path.join(assetsDir, 'logo.svg'))
   const resvg = new Resvg(svg, {
-    fitTo: {mode: 'width', value: 220},
+    fitTo: {mode: 'width', value: 140},
   })
   const png = resvg.render().asPng()
   logoCache = `data:image/png;base64,${Buffer.from(png).toString('base64')}`
@@ -126,10 +126,11 @@ function formatMetadata(input: OgInput): string | null {
 }
 
 function titleFontSize(title: string): number {
-  if (title.length > 90) return 42
-  if (title.length > 70) return 46
-  if (title.length > 50) return 50
-  return 54
+  if (title.length > 90) return 34
+  if (title.length > 70) return 38
+  if (title.length > 50) return 42
+  if (title.length > 36) return 44
+  return 46
 }
 
 function el(type: string, props: Record<string, unknown>, children?: unknown): SatoriNode {
@@ -193,13 +194,13 @@ function buildTemplate(opts: {
             color: '#ffffff',
             fontFamily: 'Inter',
             fontWeight: 500,
-            fontSize: 22,
+            fontSize: 18,
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             borderRadius: 999,
-            padding: '10px 26px',
-            marginBottom: 18,
-            height: 46,
+            padding: '8px 20px',
+            marginBottom: 12,
+            height: 38,
           },
         },
         opts.category,
@@ -217,10 +218,10 @@ function buildTemplate(opts: {
           fontFamily: 'Playfair Display, Inter',
           fontWeight: 500,
           fontSize: size,
-          lineHeight: 1.12,
+          lineHeight: 1.15,
           color: COLORS.ink,
-          width: 720,
-          lineClamp: 2,
+          width: '100%',
+          lineClamp: opts.title.length > 70 ? 3 : 2,
         },
       },
       opts.title,
@@ -234,10 +235,10 @@ function buildTemplate(opts: {
         {
           style: {
             display: 'flex',
-            marginTop: 18,
+            marginTop: 12,
             fontFamily: 'Inter',
             fontWeight: 400,
-            fontSize: 26,
+            fontSize: 22,
             color: COLORS.textMuted,
           },
         },
@@ -258,6 +259,7 @@ function buildTemplate(opts: {
         borderRadius: 28,
         border: `1px solid ${COLORS.border}`,
         overflow: 'hidden',
+        boxSizing: 'border-box',
       },
     },
     [
@@ -271,6 +273,8 @@ function buildTemplate(opts: {
             position: 'relative',
             backgroundColor: COLORS.fallbackHero,
             overflow: 'hidden',
+            flexShrink: 0,
+            boxSizing: 'border-box',
           },
         },
         heroChildren,
@@ -280,13 +284,16 @@ function buildTemplate(opts: {
         {
           style: {
             width: '100%',
-            flex: 1,
+            height: HEIGHT - HERO_HEIGHT,
             display: 'flex',
             position: 'relative',
             backgroundColor: COLORS.bg,
-            padding: '48px 80px 58px 76px',
+            boxSizing: 'border-box',
+            padding: '32px 64px',
             justifyContent: 'space-between',
-            alignItems: 'flex-end',
+            alignItems: 'center',
+            overflow: 'hidden',
+            flexShrink: 0,
           },
         },
         [
@@ -311,25 +318,29 @@ function buildTemplate(opts: {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                justifyContent: 'flex-end',
-                flex: 1,
-                maxWidth: 760,
+                justifyContent: 'center',
+                flexGrow: 1,
+                flexShrink: 1,
+                flexBasis: 0,
+                maxWidth: 900,
+                height: '100%',
                 position: 'relative',
+                paddingRight: 28,
               },
             },
             leftChildren,
           ),
           el('img', {
             src: opts.logo,
-            width: 200,
-            height: 200,
+            width: 120,
+            height: 120,
             style: {
-              width: 200,
-              height: 200,
+              width: 120,
+              height: 120,
               objectFit: 'contain',
               flexShrink: 0,
-              marginLeft: 24,
               position: 'relative',
+              alignSelf: 'center',
             },
           }),
         ],
