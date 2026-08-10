@@ -48,7 +48,7 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.15;
+  opacity: 0.25;
   background-image: url('../assets/noise.png');
   background-repeat: repeat;
   background-size: 280px 280px;
@@ -1166,10 +1166,44 @@ a:hover {
 
 .markdown-body blockquote {
   margin: 1.5rem 0;
-  padding: 0.25rem 0 0.25rem 1rem;
+  padding: 0.4rem 0 0.4rem 1.85rem;
   border-left: 2px solid var(--accent);
   color: var(--ink);
   font-style: italic;
+}
+
+.markdown-body .table-scroll {
+  width: 100%;
+  max-width: 100%;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.markdown-body table {
+  width: 100%;
+  min-width: 28rem;
+  border-collapse: collapse;
+  border: 1px solid var(--border-subtle);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.markdown-body thead th {
+  background: var(--surface-strong);
+  font-weight: 500;
+}
+
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--border-subtle);
+  padding: 0.7rem 0.9rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.markdown-body tr:nth-child(even) td {
+  background: rgba(44, 44, 44, 0.02);
 }
 
 .markdown-body code {

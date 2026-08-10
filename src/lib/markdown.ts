@@ -44,5 +44,10 @@ export function renderMarkdown(source: string): {html: string; toc: TocItem[]} {
     return `<h${level} id="${id}">${inner}</h${level}>`
   })
 
+  // Keep wide tables scrollable without breaking the article column.
+  html = html.replace(/<table[\s\S]*?<\/table>/g, (table) => {
+    return `<div class="table-scroll">${table}</div>`
+  })
+
   return {html, toc}
 }

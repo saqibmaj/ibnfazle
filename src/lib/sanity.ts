@@ -22,7 +22,6 @@ export type ContentItem = {
   author: string
   content?: string
   fileUrl?: string
-  tagSlugs: string[]
   imageUrl?: string
 }
 
@@ -99,7 +98,6 @@ function mapArticle(doc: any): ContentItem {
     readTime: readTime(doc.content || ''),
     author: DEFAULT_AUTHOR,
     content: doc.content,
-    tagSlugs: (doc.tags ?? []).map((t: Taxonomy) => t.slug),
     imageUrl: imageUrl(doc.imageUrl, 960),
   }
 }
@@ -119,7 +117,6 @@ function mapPdf(doc: any): ContentItem {
     pageCount: doc.pageCount ?? undefined,
     author: DEFAULT_AUTHOR,
     fileUrl: doc.fileUrl || undefined,
-    tagSlugs: (doc.tags ?? []).map((t: Taxonomy) => t.slug),
     imageUrl: imageUrl(doc.imageUrl, 960),
   }
 }
@@ -182,22 +179,37 @@ async function getPdfs(): Promise<ContentItem[]> {
   return (docs || []).map(mapPdf)
 }
 
+let allContentCache: Promise<ContentItem[]> | null = null
+let categoriesCache: Promise<Taxonomy[]> | null = null
+let categoryPagesCache: Promise<CategoryPage[]> | null = null
+let siteSettingsCache: Promise<SiteSettings> | null = null
+let sectionMembershipCache: Promise<Map<string, string[]>> | null = null
+
 export async function getAllContent(): Promise<ContentItem[]> {
-  const [articles, pdfs] = await Promise.all([getArticles(), getPdfs()])
-  return [...articles, ...pdfs].sort(byDateDesc)
+  if (!allContentCache) {
+    allContentCache = Promise.all([getArticles(), getPdfs()]).then(([articles, pdfs]) =>
+      [...articles, ...pdfs].sort(byDateDesc),
+    )
+  }
+  return allContentCache
 }
 
 export async function getCategories(): Promise<Taxonomy[]> {
-  return (
-    (await sanity.fetch(`*[_type == "category" && defined(slug.current)] | order(title asc) {
+  if (!categoriesCache) {
+    categoriesCache = sanity
+      .fetch(`*[_type == "category" && defined(slug.current)] | order(title asc) {
       title,
       "slug": slug.current
-    }`)) || []
-  )
+    }`)
+      .then((docs) => docs || [])
+  }
+  return categoriesCache
 }
 
 export async function getCategoryPages(): Promise<CategoryPage[]> {
-  const docs = await sanity.fetch(`*[_type == "category" && defined(slug.current)] | order(title asc) {
+  if (!categoryPagesCache) {
+    categoryPagesCache = sanity
+      .fetch(`*[_type == "category" && defined(slug.current)] | order(title asc) {
     title,
     "slug": slug.current,
     heading,
@@ -208,77 +220,64 @@ export async function getCategoryPages(): Promise<CategoryPage[]> {
       "rawItems": items[]->{${contentRefFields}}
     }
   }`)
-
-  return (docs || []).map((doc: any) => ({
-    title: doc.title,
-    slug: doc.slug,
-    heading: doc.heading || undefined,
-    subheading: doc.subheading || undefined,
-    sections: (doc.sections || [])
-      .filter((section: any) => section?.heading)
-      .map((section: any) => ({
-        _key: section._key,
-        heading: section.heading,
-        items: (section.rawItems || [])
-          .filter(Boolean)
-          .map((item: any) => (item._type === 'pdf' ? mapPdf(item) : mapArticle(item))),
-      })),
-  }))
+      .then((docs) =>
+        (docs || []).map((doc: any) => ({
+          title: doc.title,
+          slug: doc.slug,
+          heading: doc.heading || undefined,
+          subheading: doc.subheading || undefined,
+          sections: (doc.sections || [])
+            .filter((section: any) => section?.heading)
+            .map((section: any) => ({
+              _key: section._key,
+              heading: section.heading,
+              items: (section.rawItems || [])
+                .filter(Boolean)
+                .map((item: any) => (item._type === 'pdf' ? mapPdf(item) : mapArticle(item))),
+            })),
+        })),
+      )
+  }
+  return categoryPagesCache
 }
 
 /** Map of content id → section keys that include it (across all categories). */
 export async function getSectionMembership(): Promise<Map<string, string[]>> {
-  const pages = await getCategoryPages()
-  const map = new Map<string, string[]>()
-  for (const page of pages) {
-    for (const section of page.sections) {
-      for (const item of section.items) {
-        const existing = map.get(item._id) || []
-        existing.push(section._key)
-        map.set(item._id, existing)
+  if (!sectionMembershipCache) {
+    sectionMembershipCache = getCategoryPages().then((pages) => {
+      const map = new Map<string, string[]>()
+      for (const page of pages) {
+        for (const section of page.sections) {
+          for (const item of section.items) {
+            const existing = map.get(item._id) || []
+            existing.push(section._key)
+            map.set(item._id, existing)
+          }
+        }
       }
-    }
+      return map
+    })
   }
-  return map
-}
-
-export async function getContentByPath(category: string, slug: string): Promise<ContentItem | null> {
-  const doc = await sanity.fetch(
-    `*[(_type == "article" || _type == "pdf") && slug.current == $slug && category->slug.current == $category][0]{
-      _type,
-      _id,
-      title,
-      "slug": slug.current,
-      summary,
-      date,
-      content,
-      pageCount,
-      "fileUrl": file.asset->url,
-      "imageUrl": thumbnail.asset->url,
-      category->${categoryProjection},
-      "tags": tags[]->${tagProjection}
-    }`,
-    {category, slug},
-  )
-  if (!doc) return null
-  return doc._type === 'pdf' ? mapPdf(doc) : mapArticle(doc)
+  return sectionMembershipCache
 }
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  const doc = await sanity.fetch(`*[_id == "siteSettings"][0]{
+  if (!siteSettingsCache) {
+    siteSettingsCache = sanity.fetch(`*[_id == "siteSettings"][0]{
     tagline,
     socialLinks[]{platform, url}
-  }`)
-
-  const allowed = new Set(['instagram', 'youtube', 'discord'])
-
-  return {
-    tagline:
-      doc?.tagline || 'A digital library of clear, referenced articles clarifying Islam.',
-    socialLinks: (doc?.socialLinks || []).filter(
-      (l: SocialLink) => l?.platform && l?.url && allowed.has(l.platform),
-    ),
+  }`).then((doc) => {
+      const allowed = new Set(['instagram', 'youtube', 'discord'])
+      return {
+        tagline:
+          doc?.tagline || 'A digital library of clear, referenced articles clarifying Islam.',
+        socialLinks: (doc?.socialLinks || []).filter(
+          (l: SocialLink) => l?.platform && l?.url && allowed.has(l.platform),
+        ),
+      }
+    })
   }
+  return siteSettingsCache
 }
 
 /**

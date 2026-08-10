@@ -10,12 +10,13 @@ import {
   DEFAULT_AUTHOR,
   getAllContent,
   getCategories,
-  getContentByPath,
   getRelated,
   getSectionMembership,
   getSiteSettings,
+  type ContentItem,
 } from '../../lib/sanity';
 import { renderMarkdown } from '../../lib/markdown';
+import { ogImagePath } from '../../lib/og';
 
 export async function getStaticPaths() {
   const items = await getAllContent();
@@ -26,20 +27,15 @@ export async function getStaticPaths() {
         category: item.category!.slug,
         slug: item.slug,
       },
+      props: { item },
     }));
 }
 
-const { category, slug } = Astro.params;
-
-if (!category || !slug) {
-  return Astro.redirect('/');
+interface Props {
+  item: ContentItem;
 }
 
-const item = await getContentByPath(category, slug);
-
-if (!item) {
-  return Astro.redirect('/');
-}
+const { item } = Astro.props;
 
 const [catalog, settings, categories, sectionMembership] = await Promise.all([
   getAllContent(),
@@ -61,7 +57,8 @@ const dateLabel = new Intl.DateTimeFormat('en-US', {
   year: 'numeric',
 }).format(new Date(item.date + 'T00:00:00'));
 
-const ogImage = item.imageUrl || undefined;
+const category = item.category!.slug;
+const ogImage = new URL(ogImagePath(category, item.slug), Astro.site).href;
 ---
 
 <BaseLayout
@@ -70,6 +67,8 @@ const ogImage = item.imageUrl || undefined;
   ogType={isArticle ? 'article' : 'website'}
   publishedTime={item.date}
   ogImage={ogImage}
+  ogImageWidth={1200}
+  ogImageHeight={630}
 >
   <a class="back-link" href="/">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
