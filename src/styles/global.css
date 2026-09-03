@@ -523,6 +523,7 @@ a:hover {
 
 .hero-feature__media {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -617,6 +618,7 @@ a:hover {
 }
 
 .content-list > li {
+  min-width: 0;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -626,16 +628,20 @@ a:hover {
 
 .content-row {
   display: grid;
-  grid-template-columns: var(--thumb-width) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--thumb-width)) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   padding: 1.75rem 0;
   transition: transform 0.2s ease;
 }
 
-.content-row:hover {
-  opacity: 1;
-  transform: translateX(6px);
+@media (hover: hover) {
+  .content-row:hover {
+    transform: translateX(6px);
+  }
 }
 
 .content-row:hover .content-row__title {
@@ -699,7 +705,7 @@ a:hover {
 
 @media (max-width: 900px) {
   .content-row {
-    grid-template-columns: var(--thumb-width-tablet) minmax(0, 1fr);
+    grid-template-columns: minmax(0, var(--thumb-width-tablet)) minmax(0, 1fr);
     gap: 1.25rem;
   }
 
