@@ -11,6 +11,7 @@ export default defineConfig({
   redirects: {
     '/library': '/',
     '/page/1': '/',
+    '/questions/page/1': '/questions',
   },
   integrations: [
     sitemap({

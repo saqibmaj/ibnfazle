@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteHeader from './SiteHeader.astro';
+import SiteFooter from './SiteFooter.astro';
+import LibraryBrowser from './LibraryBrowser.astro';
+import { getAllContent, getCategories, getSiteSettings } from '../lib/sanity';
+import { categoryPageHref, paginate } from '../lib/pagination';
+
+interface Props { page?: number; }
+const { page = 1 } = Astro.props;
+const [catalog, categories, settings] = await Promise.all([
+  getAllContent(), getCategories(), getSiteSettings(),
+]);
+const questions = catalog.filter((item) => item.type === 'question');
+const listing = paginate(questions, page);
+const hrefForPage = (n: number) => categoryPageHref('questions', n);
+---
+
+<BaseLayout
+  title={`Questions${page > 1 ? ` · Page ${page}` : ''} | Thaqib ibn Fazle`}
+  description="Questions and referenced answers from Thaqib ibn Fazle."
+>
+  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} showDivider={false} />
+  <main>
+    <LibraryBrowser
+      items={listing.items}
+      catalog={catalog}
+      categories={categories}
+      heading="Questions & Answers"
+      showLabel={false}
+      activeType="question"
+      basePath="/questions"
+      totalCount={listing.total}
+      page={listing.page}
+      totalPages={listing.totalPages}
+      hrefForPage={hrefForPage}
+    />
+  </main>
+  <SiteFooter settings={settings} categories={categories} />
+</BaseLayout>

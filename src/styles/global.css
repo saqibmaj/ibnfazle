@@ -120,6 +120,10 @@ a:hover {
   padding-top: 64px;
 }
 
+.site-header--dividerless {
+  margin-bottom: 40px;
+}
+
 @media (max-width: 560px) {
   .site-header {
     padding-top: 40px;
@@ -321,12 +325,16 @@ a:hover {
   text-transform: uppercase;
 }
 
-/* Search + category pills */
+/* Library controls */
+
+.library-controls {
+  margin-bottom: 2rem;
+}
 
 .library-search {
   display: flex;
   gap: 0;
-  margin-bottom: 1.25rem;
+  margin: 0;
   background: transparent;
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
@@ -349,13 +357,15 @@ a:hover {
 .library-search__input {
   flex: 1;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 9px 12px;
   border: 0;
   background: transparent;
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 0.95rem;
   font-weight: 300;
+  line-height: 1.5;
+  caret-color: var(--accent);
 }
 
 .library-search__input::placeholder {
@@ -371,36 +381,19 @@ a:hover {
   border-color: var(--accent);
 }
 
-.library-search__button {
-  padding: 0 18px;
-  border: 0;
-  border-left: 1px solid var(--border-subtle);
-  background: var(--accent);
-  color: var(--bg);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity 0.2s ease;
-}
-
-.library-search__button:hover {
-  opacity: 0.88;
-}
-
 .filter-row {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin: 0 0 1.75rem;
+  margin: 14px 0 0;
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
-  padding: 6px 12px;
+  padding: 5px 10px;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius);
+  border-radius: 999px;
   background: transparent;
   color: var(--text-muted);
   font-family: var(--font-sans);
@@ -421,6 +414,54 @@ a:hover {
   color: var(--accent);
   border-color: var(--accent);
   background: var(--accent-soft);
+}
+
+.content-type-filters {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-hover) transparent;
+}
+
+.content-type-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 10px 0 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  text-transform: uppercase;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.content-type-tab:hover {
+  color: var(--ink);
+}
+
+.content-type-tab.is-active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.content-type-tab:focus-visible {
+  outline-offset: -3px;
+}
+
+.library-hero[hidden],
+[data-library-curated][hidden],
+[data-library-label][hidden] {
+  display: none;
 }
 
 .library-empty {
@@ -626,6 +667,12 @@ a:hover {
   display: none;
 }
 
+/* Pagination supplies the divider after the last visible result, even when
+   subsequent catalog rows are hidden by filters or pagination. */
+[data-library-list] > li:not([hidden]):not(:has(~ li:not([hidden]))) {
+  border-bottom: 0;
+}
+
 .content-row {
   display: grid;
   grid-template-columns: minmax(0, var(--thumb-width)) minmax(0, 1fr);
@@ -729,26 +776,6 @@ a:hover {
 
 /* Topic cluster */
 
-.topic-cluster__header {
-  margin-bottom: 1.5rem;
-}
-
-.topic-cluster__heading {
-  margin: 0;
-  font-family: var(--font-display);
-  font-weight: 500;
-  font-size: clamp(1.75rem, 4vw, 2.4rem);
-  letter-spacing: -0.01em;
-  line-height: 1.2;
-}
-
-.topic-cluster__subheading {
-  margin: 0.75rem 0 0;
-  color: var(--text-dim);
-  font-size: 1.05rem;
-  max-width: 42rem;
-}
-
 .cluster-section {
   margin-bottom: 2.75rem;
 }
@@ -784,6 +811,41 @@ a:hover {
 
 .article-shell--with-toc {
   grid-template-columns: 200px minmax(0, 1fr);
+}
+
+/* Match the article reading width without reserving an empty sidebar. */
+.question-detail {
+  max-width: 800px;
+  margin-inline: auto;
+}
+
+.article-shell--question {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.article-shell--question > main {
+  grid-column: 1;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.article-shell--question > .toc--desktop {
+  grid-column: 1;
+  grid-row: 1;
+  width: 200px;
+  margin-left: calc(-200px - 2rem);
+}
+
+/* Use the existing mobile contents control when the side rail cannot fit. */
+@media (max-width: 1311px) {
+  .article-shell--question > .toc--desktop {
+    display: none;
+  }
+
+  .article-shell--question > .toc-mobile {
+    display: block;
+  }
 }
 
 .article-category {
@@ -867,6 +929,39 @@ a:hover {
   height: 5rem;
   max-width: 100%;
   margin: 0 0 1rem;
+}
+
+.qa-question {
+  margin-bottom: 2.625rem;
+}
+
+.qa-section-label {
+  margin: 0 0 1rem;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.qa-question__text {
+  margin: 0 0 1.35rem;
+  color: var(--text-dim);
+  font-size: 1rem;
+  line-height: 1.75;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.qa-question__text:last-child {
+  margin-bottom: 0;
+}
+
+.qa-answer-label {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* When there is no thumbnail, keep generous space before bismillah */
@@ -1042,8 +1137,13 @@ a:hover {
 }
 
 @media (max-width: 900px) {
-  .article-shell--with-toc {
+  .article-shell--with-toc,
+  .article-shell--question {
     grid-template-columns: 1fr;
+  }
+
+  .article-shell--question > main {
+    grid-column: 1;
   }
 
   .toc--desktop {

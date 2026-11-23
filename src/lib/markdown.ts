@@ -35,8 +35,12 @@ export function renderMarkdown(source: string): {html: string; toc: TocItem[]} {
   const used = new Map<string, number>()
 
   html = html.replace(/<h([1-3])>([\s\S]*?)<\/h\1>/g, (_match, level, inner) => {
-    const text = stripTags(inner)
-    let id = slugify(text) || `section-${toc.length + 1}`
+    const encodedText = stripTags(inner)
+    // Decode once, after stripping markup. TOC labels remain plain text and are
+    // escaped by Astro; leave literal backslashes and existing anchor IDs intact.
+    const text = encodedText.replace(/&(?:#x[\da-f]+|#\d+|[a-z][\da-z]+);/gi,
+      (entity) => md.utils.unescapeAll(entity))
+    let id = slugify(encodedText) || `section-${toc.length + 1}`
     const count = used.get(id) || 0
     used.set(id, count + 1)
     if (count > 0) id = `${id}-${count + 1}`

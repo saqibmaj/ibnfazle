@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "check": "astro check",
+    "test": "node --test tests/content-library.test.mjs",
     "preview": "astro preview",
     "astro": "astro",
     "studio": "npm run dev --prefix studio",
@@ -20,11 +22,15 @@
     "@resvg/resvg-js": "^2.6.2",
     "@sanity/client": "^7.26.2",
     "astro": "^7.1.6",
+    "groq": "^6.24.0",
     "markdown-it": "^14.3.0",
     "markdown-it-footnote": "^4.0.0",
     "satori": "^0.29.0"
   },
   "devDependencies": {
-    "@types/markdown-it": "^14.1.2"
+    "@astrojs/check": "^0.9.12",
+    "@types/markdown-it": "^14.1.2",
+    "groq-js": "^2.0.3",
+    "typescript": "^6.0.3"
   }
 }

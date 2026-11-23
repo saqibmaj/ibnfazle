@@ -1,5 +1,6 @@
 ---
 import type { ContentItem } from '../lib/sanity';
+import { CONTENT_LABELS } from '../lib/content-types';
 
 interface Props {
   item: ContentItem;
@@ -28,11 +29,9 @@ const { item, label = 'Latest' } = Astro.props;
   </div>
   <div class="hero-feature__body">
     <p class="hero-feature__label">{label}</p>
-    {
-      item.category && (
-        <p class="hero-feature__category">{item.category.title}</p>
-      )
-    }
+    <p class="hero-feature__category">
+      {CONTENT_LABELS[item.type]}{item.category && ` · ${item.category.title}`}
+    </p>
     <h2 class="hero-feature__title">{item.title}</h2>
     <p class="hero-feature__summary">{item.summary}</p>
     <p class="hero-feature__meta">

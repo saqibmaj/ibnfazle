@@ -7,21 +7,23 @@ interface Props {
   title?: string;
   tagline?: string;
   socialLinks?: SocialLink[];
+  showDivider?: boolean;
 }
 
 const {
   title = 'Thāqib ibn Fazle',
   tagline = 'A digital library of clear, referenced articles clarifying Islam.',
   socialLinks = [],
+  showDivider = true,
 } = Astro.props;
 ---
 
-<header class="site-header">
+<header class:list={['site-header', { 'site-header--dividerless': !showDivider }]}>
   <a class="site-header__logo" href="/" aria-label="Home">
     <img src={logo.src} alt="" width="101" height="101" />
   </a>
   <h1 class="site-header__title">{title}</h1>
   <p class="site-header__tagline">{tagline}</p>
   <SocialLinks links={socialLinks} class="site-header__socials" />
-  <hr class="site-header__divider" />
+  {showDivider && <hr class="site-header__divider" />}
 </header>

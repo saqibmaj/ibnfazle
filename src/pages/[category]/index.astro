@@ -14,7 +14,7 @@ export async function getStaticPaths() {
   ]);
 
   return categoryPages
-    .filter((c) => c.slug !== 'library' && c.slug !== 'page')
+    .filter((c) => !['library', 'page', 'questions'].includes(c.slug))
     .map((category) => ({
       params: { category: category.slug },
       props: {
@@ -34,7 +34,7 @@ const description =
 ---
 
 <BaseLayout title={title} description={description}>
-  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} />
+  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} showDivider={false} />
   <main class="topic-cluster">
     <CategoryListing
       category={category}

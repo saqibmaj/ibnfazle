@@ -1,0 +1,17 @@
+---
+import ContentDetail from '../../components/ContentDetail.astro';
+import { getAllContent, type ContentItem } from '../../lib/sanity';
+
+export async function getStaticPaths() {
+  const items = await getAllContent();
+  return items.filter((item) => item.type === 'question').map((item) => ({
+    params: { slug: item.slug },
+    props: { item },
+  }));
+}
+
+interface Props { item: ContentItem; }
+const { item } = Astro.props;
+---
+
+<ContentDetail item={item} />

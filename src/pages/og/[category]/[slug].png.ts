@@ -5,10 +5,10 @@ import {renderArticleOgImage} from '../../../lib/og'
 export async function getStaticPaths() {
   const items = await getAllContent()
   return items
-    .filter((item) => item.category?.slug)
+    .filter((item) => item.type === 'question' || item.category?.slug)
     .map((item) => ({
       params: {
-        category: item.category!.slug,
+        category: item.type === 'question' ? 'questions' : item.category!.slug,
         slug: item.slug,
       },
       props: {item},

@@ -1,0 +1,17 @@
+---
+import QuestionsLibrary from '../../../components/QuestionsLibrary.astro';
+import { getAllContent } from '../../../lib/sanity';
+import { totalPagesFor } from '../../../lib/pagination';
+
+export async function getStaticPaths() {
+  const questions = (await getAllContent()).filter((item) => item.type === 'question');
+  return Array.from({length: totalPagesFor(questions.length) - 1}, (_, i) => ({
+    params: {page: String(i + 2)},
+    props: {page: i + 2},
+  }));
+}
+
+const { page } = Astro.props;
+---
+
+<QuestionsLibrary page={page} />

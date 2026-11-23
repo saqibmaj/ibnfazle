@@ -17,7 +17,7 @@ export const clusterSection = defineType({
       of: [
         defineArrayMember({
           type: 'reference',
-          to: [{type: 'article'}, {type: 'pdf'}],
+          to: [{type: 'article'}, {type: 'pdf'}, {type: 'question'}],
         }),
       ],
     }),

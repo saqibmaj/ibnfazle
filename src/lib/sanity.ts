@@ -1,4 +1,6 @@
 import {createClient} from '@sanity/client'
+import {defineQuery} from 'groq'
+import type {ContentType} from './content-types'
 
 export const DEFAULT_AUTHOR = 'Thaqib ibn Fazle'
 
@@ -9,7 +11,7 @@ export type Taxonomy = {
 
 export type ContentItem = {
   _id: string
-  type: 'article' | 'pdf'
+  type: ContentType
   title: string
   slug: string
   summary: string
@@ -21,6 +23,7 @@ export type ContentItem = {
   pageCount?: number
   author: string
   content?: string
+  question?: string
   fileUrl?: string
   imageUrl?: string
 }
@@ -121,6 +124,31 @@ function mapPdf(doc: any): ContentItem {
   }
 }
 
+function mapQuestion(doc: any): ContentItem {
+  return {
+    _id: doc._id,
+    type: 'question',
+    title: doc.title?.trim() || doc.question,
+    slug: doc.slug,
+    summary: doc.summary || '',
+    date: doc.date,
+    category: doc.category ?? null,
+    tags: doc.tags ?? [],
+    href: `/questions/${doc.slug}`,
+    readTime: readTime(doc.answer || ''),
+    author: DEFAULT_AUTHOR,
+    content: doc.answer,
+    // Older entries used the title as the full question.
+    question: doc.question?.trim() ? doc.question : doc.title,
+    imageUrl: imageUrl(doc.imageUrl, 960),
+  }
+}
+
+function mapContent(doc: any): ContentItem {
+  if (doc._type === 'question') return mapQuestion(doc)
+  return doc._type === 'pdf' ? mapPdf(doc) : mapArticle(doc)
+}
+
 function byDateDesc(a: ContentItem, b: ContentItem) {
   return b.date.localeCompare(a.date)
 }
@@ -150,14 +178,33 @@ const pdfFields = `
   "tags": tags[]->${tagProjection}
 `
 
+const questionFields = `
+  _id,
+  title,
+  question,
+  "slug": slug.current,
+  summary,
+  date,
+  answer,
+  "imageUrl": thumbnail.asset->url,
+  category->${categoryProjection},
+  "tags": tags[]->${tagProjection}
+`
+
+const questionsQuery = defineQuery(`
+  *[_type == "question" && defined(slug.current)] | order(date desc) {${questionFields}}
+`)
+
 const contentRefFields = `
   _type,
   _id,
   title,
+  question,
   "slug": slug.current,
   summary,
   date,
   content,
+  answer,
   pageCount,
   "fileUrl": file.asset->url,
   "imageUrl": thumbnail.asset->url,
@@ -179,6 +226,11 @@ async function getPdfs(): Promise<ContentItem[]> {
   return (docs || []).map(mapPdf)
 }
 
+async function getQuestions(): Promise<ContentItem[]> {
+  const docs = await sanity.fetch(questionsQuery)
+  return (docs || []).map(mapQuestion)
+}
+
 let allContentCache: Promise<ContentItem[]> | null = null
 let categoriesCache: Promise<Taxonomy[]> | null = null
 let categoryPagesCache: Promise<CategoryPage[]> | null = null
@@ -187,8 +239,8 @@ let sectionMembershipCache: Promise<Map<string, string[]>> | null = null
 
 export async function getAllContent(): Promise<ContentItem[]> {
   if (!allContentCache) {
-    allContentCache = Promise.all([getArticles(), getPdfs()]).then(([articles, pdfs]) =>
-      [...articles, ...pdfs].sort(byDateDesc),
+    allContentCache = Promise.all([getArticles(), getPdfs(), getQuestions()]).then(([articles, pdfs, questions]) =>
+      [...articles, ...pdfs, ...questions].sort(byDateDesc),
     )
   }
   return allContentCache
@@ -232,8 +284,8 @@ export async function getCategoryPages(): Promise<CategoryPage[]> {
               _key: section._key,
               heading: section.heading,
               items: (section.rawItems || [])
-                .filter(Boolean)
-                .map((item: any) => (item._type === 'pdf' ? mapPdf(item) : mapArticle(item))),
+                .filter((item: any) => item?.slug)
+                .map(mapContent),
             })),
         })),
       )

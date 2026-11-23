@@ -1,5 +1,6 @@
 ---
 import type { ContentItem } from '../lib/sanity';
+import { CONTENT_LABELS } from '../lib/content-types';
 
 interface Props {
   item: ContentItem;
@@ -7,10 +8,10 @@ interface Props {
 
 const { item } = Astro.props;
 
-const metaParts: string[] = [];
+const metaParts: string[] = [CONTENT_LABELS[item.type]];
 if (item.category?.title) metaParts.push(item.category.title);
-if (item.type === 'article' && item.readTime) metaParts.push(`${item.readTime} min`);
-if (item.type === 'pdf' && item.pageCount) metaParts.push(`${item.pageCount} pages`);
+if (item.type !== 'pdf' && item.readTime) metaParts.push(`${item.readTime} min`);
+if (item.type === 'pdf' && item.pageCount) metaParts.push(`${item.pageCount} ${item.pageCount === 1 ? 'page' : 'pages'}`);
 
 const searchCategory = [item.category?.title, item.category?.slug].filter(Boolean).join(' ');
 const searchTags = (item.tags || []).map((t) => `${t.title} ${t.slug}`).join(' ');
@@ -23,6 +24,7 @@ const searchTags = (item.tags || []).map((t) => `${t.title} ${t.slug}`).join(' '
   data-type={item.type}
   data-category={item.category?.slug || ''}
   data-title={item.title}
+  data-question={item.question}
   data-summary={item.summary}
   data-category-label={searchCategory}
   data-tags={searchTags}

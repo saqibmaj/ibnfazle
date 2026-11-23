@@ -2,136 +2,132 @@
 import ContentListItem from './ContentListItem.astro';
 import Pagination from './Pagination.astro';
 import type { ContentItem, Taxonomy } from '../lib/sanity';
+import { CONTENT_TYPES, type ContentFilter } from '../lib/content-types';
 
 interface Props {
   items: ContentItem[];
   categories: Taxonomy[];
   heading?: string;
+  showLabel?: boolean;
+  filteredHeading?: string;
   activeCategory?: string;
   /** Total items across all pages (for the count label). Defaults to items.length. */
   totalCount?: number;
   page?: number;
   totalPages?: number;
   hrefForPage?: (page: number) => string;
+  /** Complete catalog, including items on other pages, for search and type filters. */
+  catalog?: ContentItem[];
+  activeType?: ContentFilter;
+  basePath?: string;
+  featuredId?: string;
+  excludedIds?: string[];
 }
 
 const {
   items,
   categories,
   heading = 'Library',
+  showLabel = true,
+  filteredHeading = 'Library',
   activeCategory = '',
   totalCount = items.length,
   page = 1,
   totalPages = 1,
   hrefForPage,
+  catalog = items,
+  activeType = 'all',
+  basePath = '/',
+  featuredId = '',
+  excludedIds = [],
 } = Astro.props;
+const visibleIds = new Set(items.map((item) => item._id));
+const hasCurated = excludedIds.length > 0 && Astro.slots.has('curated');
 ---
 
-<section class="library-browser" data-library-browser>
-  <div class="library-search" role="search">
-    <span class="library-search__icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="8"></circle>
-        <path d="m21 21-4.3-4.3"></path>
-      </svg>
-    </span>
-    <label class="sr-only" for="library-search-input">Search library</label>
-    <input
-      id="library-search-input"
-      class="library-search__input"
-      type="search"
-      placeholder="Search…"
-      autocomplete="off"
-      data-library-search
-    />
-    <button type="button" class="library-search__button" data-library-search-btn>Search</button>
+<section class="library-browser" data-library-browser data-default-type={activeType} data-page={page} data-base-path={basePath} data-filtered-heading={filteredHeading} data-excluded-ids={JSON.stringify([...excludedIds, featuredId].filter(Boolean))}>
+  <div class="library-controls">
+    <div class="content-type-filters" role="group" aria-label="Content type">
+      {CONTENT_TYPES.map(({value, label}) => (
+        <button
+          type="button"
+          class:list={['content-type-tab', { 'is-active': activeType === value }]}
+          aria-pressed={activeType === value}
+          aria-controls="library-list"
+          data-library-type={value}
+        >{label}</button>
+      ))}
+    </div>
+    <form class="library-search" role="search" action={basePath} method="get" data-library-search-form>
+      <span class="library-search__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </svg>
+      </span>
+      <label class="sr-only" for="library-search-input">Search library</label>
+      <input
+        id="library-search-input"
+        class="library-search__input"
+        type="search"
+        name="q"
+        enterkeyhint="search"
+        placeholder="Search…"
+        autocomplete="off"
+        data-library-search
+      />
+    </form>
+
+    {
+      categories.length > 0 && (
+        <nav class="filter-row" aria-label="Categories">
+          <a class:list={['filter-chip', { 'is-active': !activeCategory }]} href="/">All</a>
+          {categories.map((cat) => (
+            <a
+              class:list={['filter-chip', { 'is-active': activeCategory === cat.slug }]}
+              href={`/${cat.slug}`}
+            >
+              {cat.title}
+            </a>
+          ))}
+        </nav>
+      )
+    }
   </div>
 
-  {
-    categories.length > 0 && (
-      <nav class="filter-row" aria-label="Categories">
-        <a class:list={['filter-chip', { 'is-active': !activeCategory }]} href="/">All</a>
-        {categories.map((cat) => (
-          <a
-            class:list={['filter-chip', { 'is-active': activeCategory === cat.slug }]}
-            href={`/${cat.slug}`}
-          >
-            {cat.title}
-          </a>
-        ))}
-      </nav>
-    )
-  }
+  {hasCurated && <div data-library-curated hidden={page !== 1}><slot name="curated" /></div>}
 
-  <div class="section-label">
+  <div class={showLabel ? 'section-label' : 'sr-only'} data-library-label hidden={hasCurated && totalCount === 0}>
     <h2 class="section-label__title">{heading}</h2>
-    <span class="section-label__meta" data-library-count>
+    <span class="section-label__meta" data-library-count role="status" aria-live="polite" aria-atomic="true">
       {totalCount} {totalCount === 1 ? 'item' : 'items'}
     </span>
   </div>
 
-  <ul class="content-list" data-library-list>
+  <ul class="content-list" id="library-list" data-library-list>
     {
-      items.map((item) => (
-        <li data-library-item>
+      catalog.map((item) => (
+        <li data-library-item hidden={!visibleIds.has(item._id)}>
           <ContentListItem item={item} />
         </li>
       ))
     }
   </ul>
 
-  <p class="library-empty" data-library-empty hidden>No matching content.</p>
+  <p class="library-empty" data-library-empty hidden={hasCurated || totalCount > 0}>
+    {activeType === 'question' ? 'No questions published yet.' : 'No matching content.'}
+  </p>
 
+  <div data-library-pagination>
   {
     hrefForPage && totalPages > 1 && (
       <Pagination page={page} totalPages={totalPages} hrefForPage={hrefForPage} />
     )
   }
+  </div>
 </section>
 
 <script>
-  const root = document.querySelector<HTMLElement>('[data-library-browser]');
-  if (root) {
-    const searchInput = root.querySelector<HTMLInputElement>('[data-library-search]');
-    const items = Array.from(root.querySelectorAll<HTMLElement>('[data-library-item]'));
-    const empty = root.querySelector<HTMLElement>('[data-library-empty]');
-    const countEl = root.querySelector<HTMLElement>('[data-library-count]');
-    const totalLabel = countEl?.textContent || '';
-
-    function apply() {
-      const q = (searchInput?.value || '').trim().toLowerCase();
-      let visible = 0;
-
-      for (const li of items) {
-        const row = li.querySelector<HTMLElement>('.content-row');
-        if (!row) continue;
-        const haystack = [
-          row.dataset.title || '',
-          row.dataset.summary || '',
-          row.dataset.categoryLabel || '',
-          row.dataset.tags || '',
-        ]
-          .join(' ')
-          .toLowerCase();
-        const show = !q || haystack.includes(q);
-        li.hidden = !show;
-        if (show) visible += 1;
-      }
-
-      if (countEl) {
-        if (q) {
-          countEl.textContent = `${visible} ${visible === 1 ? 'item' : 'items'}`;
-        } else {
-          countEl.textContent = totalLabel;
-        }
-      }
-      if (empty) empty.hidden = visible > 0;
-    }
-
-    searchInput?.addEventListener('input', apply);
-    root.querySelector('[data-library-search-btn]')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      apply();
-    });
-  }
+  import { initLibraryBrowser } from '../scripts/library-browser';
+  document.querySelectorAll<HTMLElement>('[data-library-browser]').forEach(initLibraryBrowser);
 </script>

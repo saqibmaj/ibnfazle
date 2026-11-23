@@ -20,6 +20,9 @@ export const category = defineType({
         source: 'title',
         maxLength: 96,
       },
+      validation: (rule) => rule.custom((slug) =>
+        slug?.current === 'questions' ? 'The questions slug is reserved for the Q&A library.' : true,
+      ),
     }),
     defineField({
       name: 'heading',

@@ -38,12 +38,15 @@ if (page !== listing.page) {
 ---
 
 <BaseLayout title={`Library · Page ${listing.page} | Thaqib ibn Fazle`}>
-  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} />
+  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} showDivider={false} />
   <main>
     <LibraryBrowser
       items={listing.items}
+      catalog={items}
+      featuredId={hero?._id}
       categories={categories}
       heading="Library"
+      showLabel={false}
       totalCount={listing.total}
       page={listing.page}
       totalPages={listing.totalPages}

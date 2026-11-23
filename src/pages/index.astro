@@ -19,7 +19,7 @@ const listing = paginate(rest, 1);
 ---
 
 <BaseLayout title="Thaqib ibn Fazle">
-  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} />
+  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} showDivider={false} />
   <main>
     {
       hero && (
@@ -30,8 +30,11 @@ const listing = paginate(rest, 1);
     }
     <LibraryBrowser
       items={listing.items}
+      catalog={items}
+      featuredId={hero?._id}
       categories={categories}
       heading="Library"
+      showLabel={false}
       totalCount={listing.total}
       page={listing.page}
       totalPages={listing.totalPages}

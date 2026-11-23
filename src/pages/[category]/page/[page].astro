@@ -26,7 +26,7 @@ export async function getStaticPaths() {
   }[] = [];
 
   for (const category of categoryPages) {
-    if (category.slug === 'library' || category.slug === 'page') continue;
+    if (['library', 'page', 'questions'].includes(category.slug)) continue;
 
     const categoryItems = items.filter((i) => i.category?.slug === category.slug);
     const sectionIds = new Set(
@@ -76,7 +76,7 @@ if (page !== listing.page) {
 ---
 
 <BaseLayout title={title} description={description}>
-  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} />
+  <SiteHeader tagline={settings.tagline} socialLinks={settings.socialLinks} showDivider={false} />
   <main class="topic-cluster">
     <CategoryListing
       category={category}
