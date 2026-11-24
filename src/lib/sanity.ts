@@ -45,8 +45,6 @@ export type ClusterSection = {
 }
 
 export type CategoryPage = Taxonomy & {
-  heading?: string
-  subheading?: string
   sections: ClusterSection[]
 }
 
@@ -264,8 +262,6 @@ export async function getCategoryPages(): Promise<CategoryPage[]> {
       .fetch(`*[_type == "category" && defined(slug.current)] | order(title asc) {
     title,
     "slug": slug.current,
-    heading,
-    subheading,
     sections[]{
       _key,
       heading,
@@ -276,8 +272,6 @@ export async function getCategoryPages(): Promise<CategoryPage[]> {
         (docs || []).map((doc: any) => ({
           title: doc.title,
           slug: doc.slug,
-          heading: doc.heading || undefined,
-          subheading: doc.subheading || undefined,
           sections: (doc.sections || [])
             .filter((section: any) => section?.heading)
             .map((section: any) => ({

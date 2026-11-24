@@ -25,18 +25,6 @@ export const category = defineType({
       ),
     }),
     defineField({
-      name: 'heading',
-      title: 'Page Heading',
-      type: 'string',
-      description: 'Topic cluster heading. Defaults to the category title.',
-    }),
-    defineField({
-      name: 'subheading',
-      title: 'Page Subheading',
-      type: 'text',
-      rows: 3,
-    }),
-    defineField({
       name: 'sections',
       title: 'Cluster Sections',
       type: 'array',
@@ -50,11 +38,6 @@ export const category = defineType({
       name: 'title',
       title: 'Title',
       by: [{field: 'title', direction: 'asc'}],
-    },
-    {
-      name: 'heading',
-      title: 'Heading',
-      by: [{field: 'heading', direction: 'asc'}],
     },
   ],
   preview: {

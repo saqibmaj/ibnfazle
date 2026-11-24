@@ -27,10 +27,8 @@ export async function getStaticPaths() {
 }
 
 const { category, items, categories, settings } = Astro.props;
-const heading = category.heading || category.title;
-const title = `${heading} | Thaqib ibn Fazle`;
-const description =
-  category.subheading || `Content in ${category.title} from Thaqib ibn Fazle.`;
+const title = `${category.title} | Thaqib ibn Fazle`;
+const description = `Content in ${category.title} from Thaqib ibn Fazle.`;
 ---
 
 <BaseLayout title={title} description={description}>
